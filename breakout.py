@@ -3,6 +3,7 @@ import sys
 
 # Initialize pygame
 pygame.init()
+pygame.mixer.init() # for sound
 
 # Setup some constants
 WINDOW_WIDTH = 800
@@ -49,22 +50,37 @@ class Ball:
         pygame.draw.circle(window, (255, 255, 255), (self.x, self.y), self.radius)
 
 class Brick:
-    def __init__(self, x, y, w, h):
+    def __init__(self, x, y, w, h, color):
         self.x = x
         self.y = y
         self.w = w
         self.h = h
+        self.color = color
 
     def draw(self, window):
-        pygame.draw.rect(window, (255, 255, 255), pygame.Rect(self.x, self.y, self.w, self.h))
+        pygame.draw.rect(window, self.color, pygame.Rect(self.x, self.y, self.w, self.h))
+bricks = []
+def create_bricks():
+    colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0)] # Red, Green, Blue, Yellow
+    for i in range(4):
+        row = [Brick(x, 50 + i * 25, 60, 20, colors[i]) for x in range(0, WINDOW_WIDTH, 75)]
+        bricks.extend(row)
 # Create a Paddle instance
 paddle = Paddle(WINDOW_WIDTH // 2, WINDOW_HEIGHT - 50, 100, 20, 5)
+
+
 
 # Create a Ball instance
 ball = Ball(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2, 10, 5, (0, 1))
 
 # Create some Brick instances
-bricks = [Brick(x, 50, 70, 20) for x in range(0, WINDOW_WIDTH, 75)]
+create_bricks()
+
+collision_sound = pygame.mixer.Sound("collision.mp3")
+game_over_sound = pygame.mixer.Sound("gameOver.mp3")
+score = 0
+level = 1
+ball_speed = 5
 # Main game loop
 while True:
     # Event handling
@@ -115,7 +131,22 @@ while True:
             # The ball has hit a brick. Remove the brick and bounce the ball.
             bricks.remove(brick)
             ball.direction = (ball.direction[0], -ball.direction[1])
+            collision_sound.play() # play the collision sound
+            score += 5 # give 5 points for each brick hit
             break # only handle one brick collision per frame
+    # check for game over
+    if ball.y + ball.radius > WINDOW_HEIGHT:
+        print("Game Over")
+        game_over_sound.play()
+        pygame.time.delay(2000)
+        pygame.quit()
+        sys.exit()
+
+    if not bricks:
+        level += 1
+        score *= level
+        ball_speed += level * 0.5
+        bricks = create_bricks()
 
     # Draw game state to window
     window.fill((0,0,0)) # Clear the window
@@ -123,9 +154,14 @@ while True:
     ball.draw(window) # Draw the ball
     for brick in bricks:
         brick.draw(window)
+    # Draw the score
+    font = pygame.font.Font(None, 36)
+    text = font.render('Score: ' + str(score), True, (255, 255, 255))
+    window.blit(text, (10, 10))
 
     # Update display
     pygame.display.flip()
 
     # Cap the frame rate
     clock.tick(FPS)
+
