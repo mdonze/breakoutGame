@@ -59,12 +59,15 @@ class Brick:
 
     def draw(self, window):
         pygame.draw.rect(window, self.color, pygame.Rect(self.x, self.y, self.w, self.h))
-bricks = []
+
 def create_bricks():
+    bricks = []
     colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0)] # Red, Green, Blue, Yellow
     for i in range(4):
         row = [Brick(x, 50 + i * 25, 60, 20, colors[i]) for x in range(0, WINDOW_WIDTH, 75)]
         bricks.extend(row)
+    return bricks
+
 # Create a Paddle instance
 paddle = Paddle(WINDOW_WIDTH // 2, WINDOW_HEIGHT - 50, 100, 20, 5)
 
@@ -74,7 +77,7 @@ paddle = Paddle(WINDOW_WIDTH // 2, WINDOW_HEIGHT - 50, 100, 20, 5)
 ball = Ball(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2, 10, 5, (0, 1))
 
 # Create some Brick instances
-create_bricks()
+bricks = create_bricks()
 
 collision_sound = pygame.mixer.Sound("collision.mp3")
 game_over_sound = pygame.mixer.Sound("gameOver.mp3")
@@ -146,6 +149,11 @@ while True:
         level += 1
         score *= level
         ball_speed += level * 0.5
+        pygame.time.delay(500)
+        ball = Ball(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2, 10, 5, (0, 1))
+        paddle = Paddle(WINDOW_WIDTH // 2, WINDOW_HEIGHT - 50, 100, 20, 5)
+
+
         bricks = create_bricks()
 
     # Draw game state to window
